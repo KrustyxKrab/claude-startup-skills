@@ -1,15 +1,15 @@
 ---
 name: startup-research
-description: Autonomous startup idea research using web search and free APIs. Call this skill FIRST when a user presents a startup or business idea, BEFORE running startup-validator. Researches existing solutions, market context, industry trends, adjacent innovations, customer segments, regulatory environment, and technology feasibility. Triggers on: "I have an idea for...", "is there a market for...", "what do you think of this business..."
+description: Autonomous startup idea research using web search, free APIs, and parallel subagents. Call this skill FIRST when a user presents a startup or business idea, BEFORE running startup-validator. Researches existing solutions, market context, industry trends, adjacent innovations, customer segments, regulatory environment, and technology feasibility. Triggers on: "I have an idea for...", "is there a market for...", "what do you think of this business..."
 argument-hint: "[brief idea description]"
-allowed-tools: WebSearch, WebFetch, Bash(python3 *)
+allowed-tools: WebSearch, WebFetch, Bash(python3 *), Task
 ---
 
 ## What this skill does
 
 Turn a rough startup idea into a structured Research Briefing by:
 1. Asking the founder targeted questions to understand the idea
-2. Autonomously researching the idea across 8 dimensions using web search and free APIs
+2. Launching parallel subagent tasks to research all 8 dimensions simultaneously
 3. Synthesizing findings into a Research Briefing that feeds into `startup-validator`
 
 This skill does **not** judge, score, or validate. It gathers and structures information.
@@ -36,11 +36,64 @@ Follow these throughout every interaction — they override any default behavior
 
 4. **File-first output in terminal** — Save every output to `[idea-slug]/[filename].[md|xlsx]`. State the filename before generating it. Return 3–5 bullets summarizing the key findings.
 
-5. **Background work stays silent** — Never display script paths or shell commands. Ask: "Should I run a background [competitive / market / trend] scan?" If yes, run it, save results to file or render as chart, return a bullet summary.
+5. **Parallel subagents for research** — Launch all 8 research dimensions as simultaneous Task calls, not sequential operations. Collect results, then synthesize. See "Subagent Orchestration" section below.
 
-6. **Act, don't suggest** — State actions as done: "I've drafted…" / "I started…" / "Here's the…". Never "My recommendation is…" or "You might want to consider…".
+6. **Background scans via scripts** — Ask: "Should I also run background data scans (market data, competitive domains, trends)?" If yes, run scripts in parallel with web research tasks; save results to files.
 
-7. **Results as bullets** — All research output summarized in 3–7 bullets. Full detail in files or interactive visuals.
+7. **Act, don't suggest** — State actions as done: "I've drafted…" / "I started…" / "Here's the…". Never "My recommendation is…" or "You might want to consider…".
+
+8. **Results as bullets** — All research output summarized in 3–7 bullets in the terminal. Full detail in files or interactive visuals.
+
+---
+
+## Visual Feedback Standards
+
+Use consistent status headers in terminal output so the founder can track progress at a glance:
+
+```
+━━━ RESEARCHING [idea name] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [PHASE 1 of 3]  Idea intake
+  [PHASE 2 of 3]  Parallel research (8 dimensions)
+  [PHASE 3 of 3]  Synthesis → Research Briefing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Dimension status during parallel research:
+```
+  ✓  Competitors & market gaps (12 sources)
+  ✓  Market size & growth (World Bank, FRED)
+  ✓  Customer pain points (Reddit, HN)
+  ✓  Industry trends & Why Now
+  ✓  Technology & feasibility
+  ✓  Regulatory environment
+  ✓  Business model precedents
+  ✓  Adjacent innovation & IP
+```
+
+Final summary format:
+```
+━━━ RESEARCH BRIEFING COMPLETE ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File saved:  [idea-slug]/[slug]-research-briefing.md
+  Excel files: [slug]-competitive-scan.xlsx  (if scan ran)
+               [slug]-market-data.xlsx       (if scan ran)
+               [slug]-trends.xlsx            (if scan ran)
+
+  Key findings:
+  • [bullet 1]
+  • [bullet 2]
+  • [bullet 3]
+  • [bullet 4]
+  • [bullet 5]
+
+  Next step: /startup-validator
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
 
 ## API Keys
 
@@ -96,57 +149,97 @@ Start with **Tier 1 questions** (always ask all five). Begin Phase 2 research in
 
 ---
 
-## Phase 2: Autonomous Research (8 Dimensions)
+## Phase 2: Subagent Orchestration (8 Dimensions in Parallel)
 
-Research all 8 dimensions simultaneously — do not complete one before starting the next. Before starting, ask: "Should I also run a background data scan (market data, competitive domains, trends)?" — run scripts only if the founder says yes, then save results to file and return a bullet summary.
+**CRITICAL:** Do not research dimensions sequentially. Launch all 8 as simultaneous Task calls immediately after collecting Tier 1 answers. Each task is fully independent.
 
-### Dimension 1: Existing Solutions & Competitors
-- Web search: `[problem] software/tool/app`, `[keywords] alternatives`, `best [category] tools 2025 2026`
-- Search Product Hunt, G2, Capterra, Crunchbase / AngelList
-- **B2B:** Also search G2, Gartner Magic Quadrant, Capterra
-- **B2C:** Also search App Store rankings, consumer review sites
-- If background scan approved: run competitive scan script → save to `[idea-slug]/[slug]-competitive-scan.xlsx` (sheets: Domains, SEC Filings, Patents)
-- Terminal summary: 3–5 bullets on top competitors and market gaps
+### How to orchestrate
 
-### Dimension 2: Market Context & Size
-- Web search: `[industry] market size`, `[category] TAM`, `[industry] growth rate 2025 2026`
-- If background scan approved: run market data script → save to `[idea-slug]/[slug]-market-data.xlsx`
-- Terminal summary: 3–5 bullets on market size, growth rate, key data sources
+After Tier 1 intake, announce:
+```
+Starting parallel research across 8 dimensions...
+```
 
-### Dimension 3: Customer Segment Intelligence
-- Search Reddit, Quora, Hacker News for organic problem discussions
-- Search for industry surveys, relevant communities and associations
-- Compile pain point quotes (anonymized)
-- If 10+ pain points found: save to `[idea-slug]/[slug]-customer-intelligence.xlsx` (columns: Pain Point | Source | Quote | Frequency Signal | Severity 1–5)
-- Terminal summary: top 3–5 pain points with frequency signal
+Then launch these Task calls simultaneously (in a single response, if the tool allows multiple parallel invocations):
 
-### Dimension 4: Industry Trends & "Why Now"
-- If background scan approved: run trend analysis → save to `[idea-slug]/[slug]-trends.xlsx` (sheets: Trends, Related Queries, News)
-- Look for regulatory changes, technology shifts, behavioral changes, inflection points
-- Terminal summary: 3–5 bullets on direction and key inflection points
+**Task 1 — Competitors & Market Gaps**
+```
+Search for existing solutions to [problem].
+Keywords: "[problem] software/tool/app", "[keywords] alternatives", "best [category] tools 2025 2026".
+Also search Product Hunt, G2, Capterra, Crunchbase.
+B2B: Also check Gartner Magic Quadrant.
+B2C: Also check App Store rankings, consumer reviews.
+Return: top 5 competitors, their pricing, positioning, key gaps.
+```
 
-### Dimension 5: Technology & Feasibility
-- Search GitHub for relevant open-source repos (check star count + activity)
-- Look for technical blog posts and case studies
-- Terminal summary: build complexity assessment + key risks in 3–5 bullets
+**Task 2 — Market Size & Growth**
+```
+Research market size and growth for [industry/category].
+Keywords: "[industry] market size", "[category] TAM", "[industry] growth rate 2025 2026".
+Look for analyst reports, industry associations, government data.
+Return: best TAM estimate with source, CAGR, key market segments.
+```
 
-### Dimension 6: Regulatory & Legal Environment
-- Web search: `[industry] regulations [country]`, `[category] compliance requirements`
-- Flag GDPR, HIPAA, PCI-DSS, or industry-specific mandates
-- Terminal summary: key regulatory flags only
+**Task 3 — Customer Pain Points**
+```
+Search Reddit, Quora, Hacker News for organic discussions about [problem].
+Keywords: "r/[relevant subreddit] [problem]", "[problem] frustrating", "[category] alternatives".
+Find community threads with the most engagement.
+Return: top 5 pain points by frequency, strongest quotes (anonymized), workaround behaviors.
+```
 
-### Dimension 7: Business Model Precedents
-- Research how 3–5 comparable companies price and monetize
-- Terminal summary: pricing range + dominant model in 3–5 bullets
+**Task 4 — Industry Trends & Why Now**
+```
+Research what trends, regulatory changes, or technology shifts make [idea] relevant now.
+Keywords: "[industry] trends 2025 2026", "[technology] adoption", "[regulatory change] impact".
+Look for inflection points in the last 2 years.
+Return: 3-5 timing factors, data points for each, "Why Now" narrative.
+```
 
-### Dimension 8: Adjacent Innovation & Inspiration
-- Look for solutions to the same problem in adjacent industries
-- If background scan approved: run patent landscape → save to `[idea-slug]/[slug]-patents.xlsx`
-- Terminal summary: 3–5 bullets on adjacent approaches and IP activity
+**Task 5 — Technology & Feasibility**
+```
+Assess the technical feasibility of [idea].
+Search GitHub for relevant open-source repos (check stars + recent activity).
+Look for technical blog posts and case studies about building similar systems.
+Return: build complexity (simple/medium/hard), key technical risks, relevant open-source building blocks.
+```
+
+**Task 6 — Regulatory & Legal Environment**
+```
+Research regulations affecting [idea] in [geography].
+Keywords: "[industry] regulations [country]", "[category] compliance requirements", "[industry] licensing".
+Flag: GDPR, HIPAA, PCI-DSS, or industry-specific mandates.
+Return: key regulatory requirements, major risks, jurisdictions to watch.
+```
+
+**Task 7 — Business Model Precedents**
+```
+Research how comparable companies in [category] price and monetize.
+Find 3-5 companies with similar business models.
+Look for pricing pages, investor decks, or analysis of their revenue model.
+Return: pricing range, dominant model (SaaS/usage/marketplace fee/etc), unit economics benchmarks if available.
+```
+
+**Task 8 — Adjacent Innovation & IP**
+```
+Search for solutions to [problem] in adjacent industries (not direct competitors).
+Search for recent patents related to [core technology or method].
+Keywords: "[technology] patent", "[problem] novel approach", "[adjacent industry] [same problem]".
+Return: 3-5 adjacent approaches with lessons, IP activity signal (active/quiet/contested).
+```
+
+### After all tasks complete
+
+Collect all 8 results, then:
+1. Print dimension status summary (use visual feedback format above)
+2. If background scan approved: run Python scripts in parallel (competitive_scan.py, market_data.py, trend_analysis.py, patent_landscape.py)
+3. Synthesize all findings into Research Briefing using `references/briefing-template.md`
+4. Save briefing to `[idea-slug]/[idea-slug]-research-briefing.md`
+5. Print final summary (use visual feedback format above)
 
 ---
 
-## Output: Research Briefing
+## Phase 3: Output — Research Briefing
 
 Generate using the template in `references/briefing-template.md`.
 
