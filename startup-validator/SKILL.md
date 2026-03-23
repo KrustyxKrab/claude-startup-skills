@@ -24,6 +24,58 @@ Each stage has:
 
 ---
 
+## Visual Feedback Standards
+
+Use consistent status headers so the founder can track progress at a glance:
+
+```
+━━━ VALIDATING [idea name] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [STAGE 0]  Idea Intake & Framing         ✓ complete
+  [STAGE 1]  Problem Validation            ◌ in progress
+  [STAGE 2]  Solution Validation           ○ pending
+  [STAGE 3]  Market Validation             ○ pending
+  [STAGE 4]  Business Model Validation     ○ pending
+  [SYNTHESIS] Scorecard + Pitch Outline    ○ pending
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Gate result format after each stage:
+```
+━━━ STAGE [N] GATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Result:   PROCEED / ITERATE / KILL
+  Evidence: [2-3 bullet summary of key signals]
+  File:     [idea-slug]/stage-[n]/[filename].md
+
+  Next: [what happens next]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Synthesis completion format:
+```
+━━━ VALIDATION COMPLETE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Overall verdict:  STRONG / CONDITIONAL / KILL
+  Files saved:
+    [idea-slug]/synthesis/validation-scorecard.md
+    [idea-slug]/synthesis/pitch-deck-outline.md
+    [idea-slug]/synthesis/risk-register.md
+
+  Top 3 risks:
+  • [risk 1]
+  • [risk 2]
+  • [risk 3]
+
+  Next step: /startup-pitch-deck
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## Operating Principles
 
 Follow these throughout every stage — they override any default behavior:

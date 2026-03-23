@@ -1,0 +1,57 @@
+{
+  "registry": "claude-startup-skills",
+  "version": "1.1.0",
+  "description": "Startup research, validation, and pitch deck skills for Claude Code",
+  "repository": "https://github.com/KrustyxKrab/claude-startup-skills",
+  "install": "curl -fsSL https://raw.githubusercontent.com/KrustyxKrab/claude-startup-skills/main/install.sh | bash",
+  "skills": [
+    {
+      "name": "startup-research",
+      "version": "1.1.0",
+      "description": "Autonomous startup idea research across 8 dimensions using web search and free APIs",
+      "trigger": "User presents a startup idea",
+      "commands": ["/startup-research"],
+      "dependencies": {
+        "python": ["pytrends", "openpyxl"],
+        "env": ["FRED_API_KEY", "CENSUS_API_KEY", "PATENTSVIEW_API_KEY", "NEWS_API_KEY"]
+      },
+      "outputs": [
+        "[idea-slug]/[slug]-research-briefing.md",
+        "[idea-slug]/[slug]-competitive-scan.xlsx",
+        "[idea-slug]/[slug]-market-data.xlsx",
+        "[idea-slug]/[slug]-trends.xlsx",
+        "[idea-slug]/[slug]-patents.xlsx"
+      ],
+      "feeds_into": "startup-validator"
+    },
+    {
+      "name": "startup-validator",
+      "version": "1.1.0",
+      "description": "5-stage startup validation pipeline with gate criteria and output templates T1–T12",
+      "trigger": "User wants to validate a startup idea after research",
+      "commands": ["/startup-validator"],
+      "requires": "startup-research (recommended)",
+      "stages": ["Stage 0: Idea Intake", "Stage 1: Problem Validation", "Stage 2: Solution Validation", "Stage 3: Market Validation", "Stage 4: Business Model", "Synthesis"],
+      "outputs": [
+        "[idea-slug]/stage-0/idea-framing.md",
+        "[idea-slug]/stage-1/interview-scripts.md",
+        "[idea-slug]/stage-1/problem-validation-report.md",
+        "[idea-slug]/stage-2/experiment-cards.md",
+        "[idea-slug]/stage-3/market-sizing.xlsx",
+        "[idea-slug]/stage-4/unit-economics.xlsx",
+        "[idea-slug]/synthesis/validation-scorecard.md",
+        "[idea-slug]/synthesis/pitch-deck-outline.md"
+      ],
+      "feeds_into": "startup-pitch-deck"
+    },
+    {
+      "name": "startup-pitch-deck",
+      "version": "1.1.0",
+      "description": "Builds a 10-slide Sequoia-format pitch deck in Figma using validator output",
+      "trigger": "User wants to create a Figma pitch deck",
+      "commands": ["/startup-pitch-deck"],
+      "requires": ["startup-validator", "claude-talk-to-figma MCP"],
+      "outputs": ["Figma file with 10 slides at 1280×720px"]
+    }
+  ]
+}

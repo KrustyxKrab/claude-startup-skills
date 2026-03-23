@@ -17,6 +17,49 @@ argument-hint: "[idea-slug or path to idea folder]"
 - claude-talk-to-figma MCP installed and running (see `references/setup-guide.md`)
 - Figma Desktop open with the Claude MCP plugin active and connected
 
+## Visual Feedback Standards
+
+Use consistent status messages so the founder can track progress:
+
+```
+━━━ BUILDING PITCH DECK — [idea name] ━━━━━━━━━━━━━━━━━━
+
+  [PHASE 1]  Reading validator output          ✓ complete
+  [PHASE 2]  Data confirmation with founder    ✓ complete
+  [PHASE 3]  Building slides in Figma          ◌ in progress
+
+  Slides:
+    01 Cover          ✓
+    02 Problem        ✓
+    03 Solution       ◌ building
+    04 Why Now        ○
+    05 Market         ○
+    06 Product        ○
+    07 Business Model ○
+    08 Traction       ○
+    09 Team           ○
+    10 The Ask        ○
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Completion format:
+```
+━━━ PITCH DECK COMPLETE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  10 slides built in Figma
+  Pending items: [N] (slides needing founder data)
+
+  Pending slides:
+  • Slide [N] — [field missing]
+
+  Review your deck in Figma before sharing with investors.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## Operating Principles
 
 1. **Read before building** — parse all validator output files first, extract the data, THEN start building slides. Do not make up data.
