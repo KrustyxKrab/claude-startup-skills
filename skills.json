@@ -1,6 +1,6 @@
 {
   "registry": "claude-startup-skills",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Startup research, validation, and pitch deck skills for Claude Code",
   "repository": "https://github.com/KrustyxKrab/claude-startup-skills",
   "install": "curl -fsSL https://raw.githubusercontent.com/KrustyxKrab/claude-startup-skills/main/install.sh | bash",

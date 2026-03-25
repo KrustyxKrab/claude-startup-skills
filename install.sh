@@ -9,7 +9,7 @@ set -euo pipefail
 REPO_URL="https://github.com/KrustyxKrab/claude-startup-skills.git"
 SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 INSTALL_DIR="${CLAUDE_STARTUP_SKILLS_DIR:-$HOME/.claude/startup-skills}"
-VERSION="1.1.0"
+VERSION="1.1.1"
 
 ALL_SKILLS=(startup-research startup-validator startup-pitch-deck)
 PYTHON_DEPS=(pytrends openpyxl)
