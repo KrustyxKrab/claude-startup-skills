@@ -38,6 +38,8 @@ Follow these throughout every interaction — they override any default behavior
 
 5. **Parallel subagents for research** — Launch all 8 research dimensions as simultaneous Task calls, not sequential operations. Collect results, then synthesize. See "Subagent Orchestration" section below.
 
+5a. **Subagent output discipline** — Every Task call must include this instruction: *"Write your full findings to [filename]. Return ONLY a ≤150-word summary to the main agent. Do not output raw HTML, full article text, or repeated boilerplate."* This keeps subagent results from bloating the main context window — each dimension's raw data lives on disk, not in chat.
+
 6. **Background scans via scripts** — Ask: "Should I also run background data scans (market data, competitive domains, trends)?" If yes, run scripts in parallel with web research tasks; save results to files.
 
 7. **Act, don't suggest** — State actions as done: "I've drafted…" / "I started…" / "Here's the…". Never "My recommendation is…" or "You might want to consider…".
@@ -162,80 +164,96 @@ Starting parallel research across 8 dimensions...
 
 Then launch these Task calls simultaneously (in a single response, if the tool allows multiple parallel invocations):
 
-**Task 1 — Competitors & Market Gaps**
+Each task prompt must follow this template — the disk-write and 150-word cap are mandatory, not optional:
+
+```
+You are a specialized researcher. Use WebSearch and WebFetch to find 5+ sources.
+Write your complete findings (all details, quotes, data) to: [idea-slug]/raw/[dimension].md
+Return to the main agent with a summary STRICTLY under 150 words. No raw HTML, no full article text.
+```
+
+**Task 1 — Competitors & Market Gaps** → `[idea-slug]/raw/competitors.md`
 ```
 Search for existing solutions to [problem].
 Keywords: "[problem] software/tool/app", "[keywords] alternatives", "best [category] tools 2025 2026".
 Also search Product Hunt, G2, Capterra, Crunchbase.
-B2B: Also check Gartner Magic Quadrant.
-B2C: Also check App Store rankings, consumer reviews.
-Return: top 5 competitors, their pricing, positioning, key gaps.
+B2B: Also check Gartner Magic Quadrant. B2C: Also check App Store rankings, consumer reviews.
+Write full findings to [idea-slug]/raw/competitors.md.
+Return: ≤150-word summary — top 5 competitors, pricing, positioning, key gaps.
 ```
 
-**Task 2 — Market Size & Growth**
+**Task 2 — Market Size & Growth** → `[idea-slug]/raw/market.md`
 ```
 Research market size and growth for [industry/category].
 Keywords: "[industry] market size", "[category] TAM", "[industry] growth rate 2025 2026".
 Look for analyst reports, industry associations, government data.
-Return: best TAM estimate with source, CAGR, key market segments.
+Write full findings to [idea-slug]/raw/market.md.
+Return: ≤150-word summary — best TAM estimate with source, CAGR, key market segments.
 ```
 
-**Task 3 — Customer Pain Points**
+**Task 3 — Customer Pain Points** → `[idea-slug]/raw/pain-points.md`
 ```
 Search Reddit, Quora, Hacker News for organic discussions about [problem].
 Keywords: "r/[relevant subreddit] [problem]", "[problem] frustrating", "[category] alternatives".
 Find community threads with the most engagement.
-Return: top 5 pain points by frequency, strongest quotes (anonymized), workaround behaviors.
+Write full findings (including anonymized quotes) to [idea-slug]/raw/pain-points.md.
+Return: ≤150-word summary — top 5 pain points by frequency, strongest quote, workaround behaviors.
 ```
 
-**Task 4 — Industry Trends & Why Now**
+**Task 4 — Industry Trends & Why Now** → `[idea-slug]/raw/trends.md`
 ```
 Research what trends, regulatory changes, or technology shifts make [idea] relevant now.
 Keywords: "[industry] trends 2025 2026", "[technology] adoption", "[regulatory change] impact".
 Look for inflection points in the last 2 years.
-Return: 3-5 timing factors, data points for each, "Why Now" narrative.
+Write full findings to [idea-slug]/raw/trends.md.
+Return: ≤150-word summary — 3-5 timing factors with data points, "Why Now" narrative.
 ```
 
-**Task 5 — Technology & Feasibility**
+**Task 5 — Technology & Feasibility** → `[idea-slug]/raw/technology.md`
 ```
 Assess the technical feasibility of [idea].
 Search GitHub for relevant open-source repos (check stars + recent activity).
 Look for technical blog posts and case studies about building similar systems.
-Return: build complexity (simple/medium/hard), key technical risks, relevant open-source building blocks.
+Write full findings to [idea-slug]/raw/technology.md.
+Return: ≤150-word summary — build complexity (simple/medium/hard), key risks, relevant OSS building blocks.
 ```
 
-**Task 6 — Regulatory & Legal Environment**
+**Task 6 — Regulatory & Legal Environment** → `[idea-slug]/raw/regulatory.md`
 ```
 Research regulations affecting [idea] in [geography].
 Keywords: "[industry] regulations [country]", "[category] compliance requirements", "[industry] licensing".
 Flag: GDPR, HIPAA, PCI-DSS, or industry-specific mandates.
-Return: key regulatory requirements, major risks, jurisdictions to watch.
+Write full findings to [idea-slug]/raw/regulatory.md.
+Return: ≤150-word summary — key requirements, major risks, jurisdictions to watch.
 ```
 
-**Task 7 — Business Model Precedents**
+**Task 7 — Business Model Precedents** → `[idea-slug]/raw/business-model.md`
 ```
 Research how comparable companies in [category] price and monetize.
 Find 3-5 companies with similar business models.
 Look for pricing pages, investor decks, or analysis of their revenue model.
-Return: pricing range, dominant model (SaaS/usage/marketplace fee/etc), unit economics benchmarks if available.
+Write full findings to [idea-slug]/raw/business-model.md.
+Return: ≤150-word summary — pricing range, dominant model, unit economics benchmarks if available.
 ```
 
-**Task 8 — Adjacent Innovation & IP**
+**Task 8 — Adjacent Innovation & IP** → `[idea-slug]/raw/ip-adjacent.md`
 ```
 Search for solutions to [problem] in adjacent industries (not direct competitors).
 Search for recent patents related to [core technology or method].
 Keywords: "[technology] patent", "[problem] novel approach", "[adjacent industry] [same problem]".
-Return: 3-5 adjacent approaches with lessons, IP activity signal (active/quiet/contested).
+Write full findings to [idea-slug]/raw/ip-adjacent.md.
+Return: ≤150-word summary — 3-5 adjacent approaches with lessons, IP activity signal (active/quiet/contested).
 ```
 
 ### After all tasks complete
 
-Collect all 8 results, then:
+Collect the 8 subagent summaries (~1,200 tokens total), then:
 1. Print dimension status summary (use visual feedback format above)
 2. If background scan approved: run Python scripts in parallel (competitive_scan.py, market_data.py, trend_analysis.py, patent_landscape.py)
 3. Synthesize all findings into Research Briefing using `references/briefing-template.md`
 4. Save briefing to `[idea-slug]/[idea-slug]-research-briefing.md`
 5. Print final summary (use visual feedback format above)
+6. Suggest the founder run `/compact` before starting `/startup-validator` to keep the next session's context clean — the briefing is on disk, nothing is lost
 
 ---
 

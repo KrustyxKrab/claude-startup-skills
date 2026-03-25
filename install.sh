@@ -9,9 +9,9 @@ set -euo pipefail
 REPO_URL="https://github.com/KrustyxKrab/claude-startup-skills.git"
 SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 INSTALL_DIR="${CLAUDE_STARTUP_SKILLS_DIR:-$HOME/.claude/startup-skills}"
-VERSION="1.2.0"
+VERSION="1.1.1"
 
-ALL_SKILLS=(startup-research startup-validator startup-pitch-deck efficient-startup-researcher)
+ALL_SKILLS=(startup-research startup-validator startup-pitch-deck)
 PYTHON_DEPS=(pytrends openpyxl)
 
 # ─── Colours ──────────────────────────────────────────────────────────────────
@@ -37,13 +37,11 @@ echo -e "${RESET}"
 SELECTED_SKILLS=("${ALL_SKILLS[@]}")
 GLOBAL=false
 SKIP_PYTHON=false
-WITH_MCP=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --global)      GLOBAL=true; shift ;;
     --no-python)   SKIP_PYTHON=true; shift ;;
-    --with-mcp)    WITH_MCP=true; shift ;;
     --skill)       SELECTED_SKILLS=("$2"); shift 2 ;;
     --list)
       echo "Available skills:"; printf '  • %s\n' "${ALL_SKILLS[@]}"; exit 0 ;;
@@ -52,7 +50,6 @@ while [[ $# -gt 0 ]]; do
       echo "  --skill <name>   Install a single skill"
       echo "  --global         Install to /usr/local (requires sudo)"
       echo "  --no-python      Skip Python dependency installation"
-      echo "  --with-mcp       Install Brave Search + Qdrant MCP servers"
       echo "  --list           List available skills"
       exit 0 ;;
     *) warn "Unknown option: $1"; shift ;;
@@ -125,60 +122,6 @@ if ! $SKIP_PYTHON; then
   done
 fi
 
-# ─── MCP servers (optional) ───────────────────────────────────────────────────
-if $WITH_MCP; then
-  step "Installing MCP servers for efficient-startup-researcher..."
-
-  # Brave Search MCP
-  if command -v npx &>/dev/null; then
-    info "Installing @modelcontextprotocol/server-brave-search..."
-    npx -y @modelcontextprotocol/server-brave-search --help &>/dev/null \
-      && ok "Brave Search MCP installed" \
-      || warn "Could not install Brave Search MCP — install manually: npm install -g @modelcontextprotocol/server-brave-search"
-  else
-    warn "Node.js not found — skipping Brave Search MCP (install Node.js 18+ first)"
-  fi
-
-  # Qdrant MCP
-  if command -v uvx &>/dev/null || command -v pip &>/dev/null; then
-    if command -v uvx &>/dev/null; then
-      uvx mcp-server-qdrant --help &>/dev/null \
-        && ok "Qdrant MCP available via uvx" \
-        || warn "Could not verify Qdrant MCP — try: pip install mcp-server-qdrant"
-    else
-      python3 -m pip install --quiet mcp-server-qdrant \
-        && ok "Qdrant MCP installed" \
-        || warn "Could not install Qdrant MCP — try: pip install mcp-server-qdrant"
-    fi
-  else
-    warn "Neither uvx nor pip found — skipping Qdrant MCP"
-  fi
-
-  echo ""
-  echo "  MCP settings snippet (add to ~/.claude/settings.json):"
-  echo ""
-  cat <<'MCPEOF'
-  "mcpServers": {
-    "brave-search": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-      "env": { "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY" }
-    },
-    "qdrant": {
-      "command": "uvx",
-      "args": ["mcp-server-qdrant"],
-      "env": {
-        "QDRANT_URL": "http://localhost:6333",
-        "COLLECTION_NAME": "startup-research"
-      }
-    }
-  }
-MCPEOF
-  echo ""
-  echo "  Full setup guide: ~/.claude/startup-skills/efficient-startup-researcher/references/mcp-setup.md"
-  echo ""
-fi
-
 # ─── API key setup (optional) ─────────────────────────────────────────────────
 step "Optional API keys (all free, all optional)..."
 echo ""
@@ -208,12 +151,7 @@ echo ""
 echo "  Restart Claude Code and type / to see your new skills."
 echo ""
 echo "  Quick start:"
-echo "    /startup-research             I want to build ..."
-echo "    /efficient-startup-researcher I want to build ...  (token-optimized)"
+echo "    /startup-research  I want to build ..."
 echo "    /startup-validator"
 echo "    /startup-pitch-deck [idea-slug]"
-echo ""
-echo "  MCP acceleration (optional, makes efficient-startup-researcher faster):"
-echo "    ./install.sh --with-mcp"
-echo "    See: efficient-startup-researcher/references/mcp-setup.md"
 echo ""
