@@ -1,6 +1,6 @@
 {
   "registry": "claude-startup-skills",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Startup research, validation, and pitch deck skills for Claude Code",
   "repository": "https://github.com/KrustyxKrab/claude-startup-skills",
   "install": "curl -fsSL https://raw.githubusercontent.com/KrustyxKrab/claude-startup-skills/main/install.sh | bash",
@@ -52,6 +52,29 @@
       "commands": ["/startup-pitch-deck"],
       "requires": ["startup-validator", "claude-talk-to-figma MCP"],
       "outputs": ["Figma file with 10 slides at 1280×720px"]
+    },
+    {
+      "name": "efficient-startup-researcher",
+      "version": "1.0.0",
+      "description": "Token-optimized startup research using Haiku subagents and context pruning. ~80% cheaper than startup-research with equivalent depth. Uses Orchestrator-Worker pattern.",
+      "trigger": "User wants token-efficient research or is running multiple ideas in one session",
+      "commands": ["/efficient-startup-researcher"],
+      "mcp_acceleration": {
+        "brave-search": "Replaces WebSearch with structured JSON results — faster subagent parsing",
+        "qdrant": "Caches briefings as vectors — skips re-research on similar ideas"
+      },
+      "outputs": [
+        "[idea-slug]/[slug]-research-briefing.md",
+        "[idea-slug]/raw/competitors.md",
+        "[idea-slug]/raw/market.md",
+        "[idea-slug]/raw/pain-points.md",
+        "[idea-slug]/raw/trends.md",
+        "[idea-slug]/raw/technology.md",
+        "[idea-slug]/raw/regulatory.md",
+        "[idea-slug]/raw/business-model.md",
+        "[idea-slug]/raw/ip-adjacent.md"
+      ],
+      "feeds_into": "startup-validator"
     }
   ]
 }

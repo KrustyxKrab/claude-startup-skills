@@ -9,16 +9,19 @@ Three Claude Code skills that take a rough idea from first sentence to investor-
 | Skill | What it does | Run when |
 |-------|-------------|----------|
 | `/startup-research` | Researches your idea across 8 dimensions in parallel — competitors, market size, trends, regulatory risk, patents, customer pain — and writes a Research Briefing | You have a new idea |
+| `/efficient-startup-researcher` | Same depth as startup-research but ~80% cheaper. Uses Haiku subagents that write to disk and return 150-word summaries. Compacts context after synthesis. Optional Brave Search + Qdrant MCP acceleration. | Token budget matters, or running multiple ideas in one session |
 | `/startup-validator` | 5-stage validation pipeline with enforced gate criteria. Produces interview scripts, Excel models, and a pitch deck outline where every claim traces to evidence | You're ready to validate |
 | `/startup-pitch-deck` | Builds a professional 10-slide Sequoia-format deck directly inside Figma using your validator output | You want investor-ready slides |
 
 ```
-/startup-research ──► Stage 0 ──► Stage 1 ──► Stage 2 ──► Stage 3 ──► Stage 4 ──► Synthesis
-       │              Idea        Problem     Solution     Market     Business      Pitch Deck
-  Research Briefing  Intake     Validation  Validation   Validation    Model      + Scorecard
-                                                                                      │
-                                                                             /startup-pitch-deck
-                                                                              (Figma via MCP)
+/startup-research  ──────────────────────────────────────────────────────────────────────────┐
+                                                                                              │
+/efficient-startup-researcher ──► Stage 0 ──► Stage 1 ──► Stage 2 ──► Stage 3 ──► Stage 4 ──► Synthesis
+  (Haiku subagents,           Idea        Problem     Solution     Market     Business      Pitch Deck
+   disk-based memory,        Intake     Validation  Validation   Validation    Model      + Scorecard
+   Brave Search + Qdrant)                                                                     │
+                                                                                    /startup-pitch-deck
+                                                                                     (Figma via MCP)
 ```
 
 ---
@@ -51,9 +54,11 @@ pip install pytrends openpyxl
 ### Options
 
 ```bash
-./install.sh --skill startup-research   # Install a single skill
-./install.sh --no-python                # Skip Python deps
-./install.sh --list                     # Show available skills
+./install.sh --skill startup-research              # Install a single skill
+./install.sh --skill efficient-startup-researcher  # Install token-optimized researcher
+./install.sh --with-mcp                            # Also install Brave Search + Qdrant MCPs
+./install.sh --no-python                           # Skip Python deps
+./install.sh --list                                # Show available skills
 ```
 
 Restart Claude Code after installing. Skills appear in the `/` menu immediately.
@@ -80,6 +85,27 @@ Claude asks 5 targeted questions, then researches 8 dimensions in parallel using
 - Adjacent innovation and IP activity
 
 **Output:** `[idea-slug]/[slug]-research-briefing.md` + optional Excel data files
+
+---
+
+### 1b. Research (token-optimized)
+
+```
+/efficient-startup-researcher I want to build a SaaS tool for freelance designers to manage client feedback
+```
+
+Same 8 research dimensions, same briefing format as `/startup-research`, but structured as an **Orchestrator-Worker** pattern:
+
+- Haiku subagents handle all web reading — their raw HTML never enters the main context
+- Each subagent writes a full report to `[idea-slug]/raw/[dimension].md` and returns a ≤150-word summary
+- Main thread sees ~1,200 tokens of summaries instead of 50,000+ tokens of raw web content
+- After synthesis, `/compact` resets the context window for the validator
+
+**With MCP acceleration** (see [MCP Setup](#mcp-setup)):
+- **Brave Search** — structured JSON results, no ads/nav noise, ~40% faster subagent parsing
+- **Qdrant** — vector cache of past briefings; similar ideas (>0.85 cosine) are surfaced before researching
+
+**Output:** Same as `/startup-research` — `[idea-slug]/[slug]-research-briefing.md` + `[idea-slug]/raw/*.md`
 
 ---
 
@@ -182,6 +208,67 @@ my-idea-slug/
     ├── pitch-deck-outline.md            # T11: Sequoia 10-slide with evidence links
     └── risk-register.md                 # T12: Risk tracking table
 ```
+
+---
+
+## MCP Setup
+
+Two optional MCP servers accelerate the `efficient-startup-researcher` skill. Both are free and take ~5 minutes to set up.
+
+### Brave Search (faster web search)
+
+Replaces the built-in `WebSearch` with structured JSON results — no ads, navigation, or boilerplate. Subagents parse results ~40% faster.
+
+```bash
+# Install
+npm install -g @modelcontextprotocol/server-brave-search
+
+# Get free API key: https://brave.com/search/api/
+```
+
+Add to `~/.claude/settings.json`:
+```json
+"mcpServers": {
+  "brave-search": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+    "env": { "BRAVE_API_KEY": "your_key" }
+  }
+}
+```
+
+### Qdrant (research memory)
+
+Caches briefings as vector embeddings. Before researching a new idea, the skill queries Qdrant — if a similar past briefing exists (cosine similarity > 0.85), it's surfaced and you can skip re-research.
+
+```bash
+# Run Qdrant locally (free, no account required)
+docker run -d -p 6333:6333 -v $(pwd)/qdrant_storage:/qdrant/storage qdrant/qdrant
+
+# Install MCP server
+pip install uv && uvx mcp-server-qdrant --help
+```
+
+Add to `~/.claude/settings.json`:
+```json
+"mcpServers": {
+  "qdrant": {
+    "command": "uvx",
+    "args": ["mcp-server-qdrant"],
+    "env": {
+      "QDRANT_URL": "http://localhost:6333",
+      "COLLECTION_NAME": "startup-research"
+    }
+  }
+}
+```
+
+Or run the installer with `--with-mcp` to get a guided setup:
+```bash
+./install.sh --with-mcp
+```
+
+Full guide: [efficient-startup-researcher/references/mcp-setup.md](efficient-startup-researcher/references/mcp-setup.md)
 
 ---
 
