@@ -151,26 +151,69 @@ Start with **Tier 1 questions** (always ask all five). Begin Phase 2 research in
 
 ---
 
+## Phase 1b: Research Plan (Plan Gate — REQUIRED)
+
+**Do not launch any subagents until the founder approves this plan.**
+
+After collecting Tier 1 answers, generate a one-page Research Plan and output it in the terminal:
+
+```
+━━━ RESEARCH PLAN — [idea name] ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Idea:      [1-sentence summary]
+  Archetype: [B2C / B2B SMB / B2B Enterprise / Marketplace]
+  Geography: [target market]
+
+  3 Key Hypotheses to test:
+  1. [hypothesis 1 — problem exists and is painful]
+  2. [hypothesis 2 — market is large enough]
+  3. [hypothesis 3 — timing / why now is right]
+
+  2 Kill Signals (research stops if either is true):
+  1. [kill signal 1 — e.g. market too small or problem not recognized]
+  2. [kill signal 2 — e.g. entrenched competitor with strong network effects]
+
+  8 Research Dimensions: competitors, market size, pain points,
+  trends, technology, regulatory, business model, IP/adjacent.
+
+  Estimated output: [idea-slug]/[slug]-research-briefing.md
+                    [idea-slug]/raw/*.md (8 dimension files)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Proceed with research? (yes / adjust [what to change])
+```
+
+Wait for explicit approval. If the founder adjusts scope, update the plan and show it again. Do not launch subagents until the founder says "yes" or equivalent.
+
+---
+
 ## Phase 2: Subagent Orchestration (8 Dimensions in Parallel)
 
-**CRITICAL:** Do not research dimensions sequentially. Launch all 8 as simultaneous Task calls immediately after collecting Tier 1 answers. Each task is fully independent.
+**CRITICAL:** Do not research dimensions sequentially. Launch all 8 as simultaneous Task calls only after the Phase 1b Research Plan is approved. Each task is fully independent.
 
 ### How to orchestrate
 
-After Tier 1 intake, announce:
+After plan approval, announce:
 ```
 Starting parallel research across 8 dimensions...
 ```
 
 Then launch these Task calls simultaneously (in a single response, if the tool allows multiple parallel invocations):
 
-Each task prompt must follow this template — the disk-write and 150-word cap are mandatory, not optional:
+Each task prompt must follow this template — the disk-write, 150-word cap, and model are mandatory:
 
 ```
+Model: claude-haiku-4-5-20251001
 You are a specialized researcher. Use WebSearch and WebFetch to find 5+ sources.
 Write your complete findings (all details, quotes, data) to: [idea-slug]/raw/[dimension].md
 Return to the main agent with a summary STRICTLY under 150 words. No raw HTML, no full article text.
 ```
+
+**Failure handling:** If a Task returns an error or a summary that is clearly low-quality (fewer than 3 data points, generic content not specific to the idea):
+1. Retry that single Task once
+2. If it fails again: note `⚠ [dimension] — low confidence` in the status summary, save what exists to the raw file, and flag it in the briefing as `[NEEDS VERIFICATION]`
+3. Never block the other 7 dimensions waiting for one to recover
 
 **Task 1 — Competitors & Market Gaps** → `[idea-slug]/raw/competitors.md`
 ```
@@ -253,7 +296,21 @@ Collect the 8 subagent summaries (~1,200 tokens total), then:
 3. Synthesize all findings into Research Briefing using `references/briefing-template.md`
 4. Save briefing to `[idea-slug]/[idea-slug]-research-briefing.md`
 5. Print final summary (use visual feedback format above)
-6. Suggest the founder run `/compact` before starting `/startup-validator` to keep the next session's context clean — the briefing is on disk, nothing is lost
+6. **Required:** Tell the founder to run `/compact` before starting `/startup-validator`. Use this exact message:
+
+```
+━━━ NEXT STEP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Your Research Briefing is saved to disk. Before validating,
+  run /compact to reset the context window.
+
+  The briefing is on disk — nothing is lost.
+  Then type: /startup-validator
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Do NOT proceed to offer validation steps or next analysis. The session ends here until the founder runs /compact and starts /startup-validator fresh.
 
 ---
 

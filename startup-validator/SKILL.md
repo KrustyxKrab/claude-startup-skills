@@ -24,6 +24,47 @@ Each stage has:
 
 ---
 
+## Negative Constraints — NEVER do these
+
+These override any founder request. If a founder pushes back, explain the constraint and hold it.
+
+- **NEVER advance a stage** on fewer interviews or signals than the gate criteria require
+- **NEVER accept "everyone" as a customer segment** — push until a specific persona is named
+- **NEVER count impressions, page views, or social likes** as validation evidence — only actions (signups, payments, meetings booked) count
+- **NEVER fabricate data, quotes, or statistics** — if a field is missing, ask for it or mark it [PENDING]
+- **NEVER skip bias detection** — flag each detected bias by name, state the intervention, then continue
+- **NEVER ignore a Kill signal** — if kill criteria are met, output a Kill Report and stop (see Kill Protocol below)
+- **NEVER let a stage run >14 days** without checking in — stalled stages need a restart or kill decision
+- **NEVER mark a Synthesis output investor-ready** if any claim is [PENDING]
+
+## Kill Protocol
+
+If kill signals are present at any stage gate:
+
+1. Output `━━━ KILL DECISION ━━━` header
+2. State which kill signal was triggered and the evidence
+3. Generate T12 (Risk Register) with the terminal risks documented
+4. Write a Kill Report to `[idea-slug]/kill-report.md` with: signal triggered, evidence, what was learned, what to validate before revisiting
+5. Stop. Do not proceed to the next stage.
+
+```
+━━━ KILL DECISION — [idea name] ━━━━━━━━━━━━━━━━━━━━━━
+
+  Stage:   [Stage N — Problem/Solution/Market/Business]
+  Signal:  [e.g. <50% problem recognition across 22 interviews]
+  Evidence: [specific data]
+
+  What was learned: [1-2 sentences]
+  Before revisiting: [what would need to change]
+
+  Kill Report: [idea-slug]/kill-report.md
+  Risk Register: [idea-slug]/synthesis/risk-register.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## Visual Feedback Standards
 
 Use consistent status headers so the founder can track progress at a glance:
@@ -210,13 +251,8 @@ Follow these throughout every stage — they override any default behavior:
 | Crowdfunding | ✅ Excellent | ❌ Businesses don't Kickstart |
 | Sales Conversation Test | ❌ | ✅ Outreach → calls → proposals |
 
-**B2B Sales Conversation Test (when no product exists yet):**
-1. Identify 20-30 target companies via LinkedIn
-2. Cold outreach with problem-first messaging (not product pitch)
-3. Goal: book 10 discovery calls
-4. Present value proposition in calls (slides, not product)
-5. Ask: "If this existed today, what would next steps look like?"
-- Success: 10+ calls booked from 30 outreach; 3+ advance to proposal
+**B2B Sales Conversation Test:** Full protocol in `references/stage-2-solution.md`. Summary: cold outreach to 20-30 companies → goal 10 discovery calls → present value proposition (slides, not product) → ask "If this existed today, what would next steps look like?"
+- Success: 10+ calls booked; 3+ advance to proposal
 - Kill: <3 calls booked OR all end with "interesting, keep me posted"
 
 ### Gate criteria
@@ -269,13 +305,9 @@ Follow these throughout every stage — they override any default behavior:
 - Research channel benchmarks (CPC/CTR by channel and industry) → bullets in terminal
 - Draft Business Model slide content → save to `[idea-slug]/stage-4/business-model-slides.md`
 
-### Unit economics by archetype
+### Unit economics targets (full benchmarks in `references/stage-4-business-model.md`)
 
-| Metric | B2C | B2B SMB | B2B Mid-Market | B2B Enterprise |
-|--------|-----|---------|----------------|----------------|
-| Target LTV:CAC | >3:1 | >3:1 | >4:1 | >5:1 |
-| CAC payback | <3 mo | <6 mo | <12 mo | <18 mo |
-| Monthly churn target | <5% | <3% | <2% | <1% |
+B2C: LTV:CAC >3:1, payback <3mo, churn <5%/mo | B2B SMB: >3:1, <6mo, <3% | B2B Enterprise: >5:1, <18mo, <1%
 
 ### Sean Ellis test
 
